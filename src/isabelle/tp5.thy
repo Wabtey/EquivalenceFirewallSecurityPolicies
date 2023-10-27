@@ -34,26 +34,60 @@ value "filter (2,2,2,2) aChain2"
 (* quickcheck [tester=exhaustive] *)
 (* quickcheck [tester=narrowing] *)
 (* quickcheck [tester=narrowing, size=7, timeout=120] *)
+(* Delete all iteration of e in the given list *)
 
-fun difference::"'a list => 'a list => 'a list"
+fun delete::"'a => 'a list => 'a list"
   where
- (* "difference _ [] = []" | *)
-    "difference [] _ = []" |
-    "difference (x # xs) ys = (
-      if List.member x ys \<and> \<not>List.member x xs then (x # (difference xs ys))
-      else difference xs ys
+    "delete _ [] = []" |
+    "delete e (x # xs) = (
+      if (e=x) then delete e xs
+      else (x # delete e xs)
     )"
 
+(* list1 - list2 *)
+fun difference::"'a list \<Rightarrow> 'a list \<Rightarrow> 'a list"
+  where
+  "difference _ [] = []" |
+  "difference xs (y # ys) = difference (delete y xs) ys"
+  (*
+  "difference xs (y # ys) = (
+    if List.member xs y then difference (delete y xs) ys
+    else difference xs ys
+  )"
+  *)
+
+fun intersection::"'a list => 'a list => 'a list"
+  where
+ (* "intersection _ [] = []" | *)
+    "intersection [] _ = []" |
+    "intersection (x # xs) ys = (
+      if List.member ys x \<and> \<not>List.member xs x then (x # (intersection xs ys))
+      else intersection xs ys
+    )"
+
+(*
+  The first rules override the following.
+*)
 fun acceptedAddresses::"chain \<Rightarrow> address list"
   where
   "acceptedAddresses [] = []" |
   "acceptedAddresses ((Accept as) #rs) = (
-    List.union as (acceptedAddresses rs)
+    List.union (acceptedAddresses rs) as
   )" |
   "acceptedAddresses ((Drop as) #rs) = (
-    difference as (acceptedAddresses rs)
+    difference (acceptedAddresses rs) as
   )"
 
+(* If we weren't working on CHAIN *)
+fun acceptedAddresses2::"chain \<Rightarrow> address list \<Rightarrow> address list"
+  where
+  "acceptedAddresses2 [] _ = []" |
+  "acceptedAddresses2 ((Accept as) #rs) drops = (
+    List.union (difference as drops) (acceptedAddresses2 rs drops)
+  )" |
+  "acceptedAddresses2 ((Drop as) #rs) drops = (
+    difference as (acceptedAddresses2 rs (List.append as drops))
+  )"
 
 (* The function/predicate to program and to prove! *)
 fun equal:: "chain \<Rightarrow> chain \<Rightarrow> bool"
@@ -62,7 +96,7 @@ fun equal:: "chain \<Rightarrow> chain \<Rightarrow> bool"
    acceptedAddresses c1 = acceptedAddresses c2
 "
 
-value equal aChain1 aChain2
+value "equal aChain1 aChain2"
 
 lemma "equal c1 c2 \<longrightarrow> True"
   nitpick  [timeout=120]
