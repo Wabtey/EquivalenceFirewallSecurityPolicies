@@ -67,6 +67,8 @@ fun intersection::"'a list => 'a list => 'a list"
 
 (*
   The first rules override the following.
+  As we are working backwards,
+  a list of rules (Accept A, Drop D) will contain all the A
 *)
 fun acceptedAddresses::"chain \<Rightarrow> address list"
   where
@@ -76,17 +78,6 @@ fun acceptedAddresses::"chain \<Rightarrow> address list"
   )" |
   "acceptedAddresses ((Drop as) #rs) = (
     difference (acceptedAddresses rs) as
-  )"
-
-(* If we weren't working on CHAIN *)
-fun acceptedAddresses2::"chain \<Rightarrow> address list \<Rightarrow> address list"
-  where
-  "acceptedAddresses2 [] _ = []" |
-  "acceptedAddresses2 ((Accept as) #rs) drops = (
-    List.union (difference as drops) (acceptedAddresses2 rs drops)
-  )" |
-  "acceptedAddresses2 ((Drop as) #rs) drops = (
-    difference as (acceptedAddresses2 rs (List.append as drops))
   )"
 
 (* The function/predicate to program and to prove! *)
