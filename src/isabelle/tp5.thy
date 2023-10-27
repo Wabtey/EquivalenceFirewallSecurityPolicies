@@ -65,6 +65,15 @@ fun intersection::"'a list => 'a list => 'a list"
       else intersection xs ys
     )"
 
+fun isSubSet::"'a list \<Rightarrow> 'a list \<Rightarrow> bool"
+  where
+    "isSubSet [] _ = True" |
+    "isSubSet (x # xs) ys = (List.member ys x \<and> isSubSet xs ys)"
+
+definition listEquality ::"'a list => 'a list => bool" where
+[code_abbrev]: "listEquality list1 list2 \<longleftrightarrow>
+   isSubSet list1 list2 \<and> isSubSet list2 list1"
+
 (*
   The first rules override the following.
   As we are working backwards,
@@ -84,7 +93,7 @@ fun acceptedAddresses::"chain \<Rightarrow> address list"
 fun equal:: "chain \<Rightarrow> chain \<Rightarrow> bool"
   where
 "equal c1 c2 =
-   acceptedAddresses c1 = acceptedAddresses c2
+   listEquality (acceptedAddresses c1) (acceptedAddresses c2)
 "
 
 value "equal aChain1 aChain2"
@@ -92,7 +101,8 @@ value "equal aChain1 aChain2"
 lemma "equal c1 c2 \<longrightarrow> True"
   nitpick  [timeout=120]
   quickcheck [tester=narrowing]
-  oops
+  apply auto
+  done
 
 (* Code exportation directive *)
 export_code equal in Scala
