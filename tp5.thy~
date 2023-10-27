@@ -34,35 +34,14 @@ value "filter (2,2,2,2) aChain2"
 (* quickcheck [tester=exhaustive] *)
 (* quickcheck [tester=narrowing] *)
 (* quickcheck [tester=narrowing, size=7, timeout=120] *)
-(* Delete all iteration of e in the given list *)
 
-fun delete::"'a => 'a list => 'a list"
+fun difference::"'a list => 'a list => 'a list"
   where
-    "delete _ [] = []" |
-    "delete e (x # xs) = (
-      if (e=x) then delete e xs
-      else (x # delete e xs)
-    )"
-
-(* list2 - list1 *)
-fun difference::"'a list \<Rightarrow> 'a list \<Rightarrow> 'a list"
-  where
-  "difference [] _ = []" |
-  "difference (x # xs) ys = difference xs (delete x ys)"
-  (*
-  "difference (x # xs) ys = (
-    if List.member ys x then difference xs (delete x ys)
-    else difference xs ys
-  )"
-  *)
-
-fun intersection::"'a list => 'a list => 'a list"
-  where
- (* "intersection _ [] = []" | *)
-    "intersection [] _ = []" |
-    "intersection (x # xs) ys = (
-      if List.member ys x \<and> \<not>List.member xs x then (x # (intersection xs ys))
-      else intersection xs ys
+ (* "difference _ [] = []" | *)
+    "difference [] _ = []" |
+    "difference (x # xs) ys = (
+      if List.member x ys \<and> \<not>List.member x xs then (x # (difference xs ys))
+      else difference xs ys
     )"
 
 fun acceptedAddresses::"chain \<Rightarrow> address list"
@@ -74,6 +53,7 @@ fun acceptedAddresses::"chain \<Rightarrow> address list"
   "acceptedAddresses ((Drop as) #rs) = (
     difference as (acceptedAddresses rs)
   )"
+
 
 (* The function/predicate to program and to prove! *)
 fun equal:: "chain \<Rightarrow> chain \<Rightarrow> bool"
