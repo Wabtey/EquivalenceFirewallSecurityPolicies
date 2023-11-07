@@ -37,6 +37,7 @@ value "filter (2,2,2,2) aChain2"
 
 (* ---------- Utilities ----------*)
 
+(* list1 isSubSet list2 *)
 fun isSubSet::"'a list \<Rightarrow> 'a list \<Rightarrow> bool"
   where
     "isSubSet [] _ = True" |
