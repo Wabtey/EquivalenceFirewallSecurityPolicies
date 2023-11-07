@@ -34,36 +34,8 @@ value "filter (2,2,2,2) aChain2"
 (* quickcheck [tester=exhaustive] *)
 (* quickcheck [tester=narrowing] *)
 (* quickcheck [tester=narrowing, size=7, timeout=120] *)
-(* Delete all iteration of e in the given list *)
 
-fun delete::"'a => 'a list => 'a list"
-  where
-    "delete _ [] = []" |
-    "delete e (x # xs) = (
-      if (e=x) then delete e xs
-      else (x # delete e xs)
-    )"
-
-(* list1 - list2 *)
-fun difference::"'a list \<Rightarrow> 'a list \<Rightarrow> 'a list"
-  where
-  "difference _ [] = []" |
-  "difference xs (y # ys) = difference (delete y xs) ys"
-  (*
-  "difference xs (y # ys) = (
-    if List.member xs y then difference (delete y xs) ys
-    else difference xs ys
-  )"
-  *)
-
-fun intersection::"'a list => 'a list => 'a list"
-  where
- (* "intersection _ [] = []" | *)
-    "intersection [] _ = []" |
-    "intersection (x # xs) ys = (
-      if List.member ys x \<and> \<not>List.member xs x then (x # (intersection xs ys))
-      else intersection xs ys
-    )"
+(* ---------- Utilities ----------*)
 
 fun isSubSet::"'a list \<Rightarrow> 'a list \<Rightarrow> bool"
   where
@@ -73,6 +45,60 @@ fun isSubSet::"'a list \<Rightarrow> 'a list \<Rightarrow> bool"
 definition listEquality ::"'a list => 'a list => bool" where
 [code_abbrev]: "listEquality list1 list2 \<longleftrightarrow>
    isSubSet list1 list2 \<and> isSubSet list2 list1"
+
+(* Delete all iteration of e in the given list *)
+fun delete::"'a => 'a list => 'a list"
+  where
+    "delete _ [] = []" |
+    "delete e (x # xs) = (
+      if (e=x) then delete e xs
+      else (x # delete e xs)
+    )"
+
+(* list1 \ list2 *)
+fun difference::"'a list \<Rightarrow> 'a list \<Rightarrow> 'a list"
+  where
+  "difference xs [] = xs" |
+  "difference xs (y # ys) = difference (delete y xs) ys"
+  (*
+  "difference xs (y # ys) = (
+    if List.member xs y then difference (delete y xs) ys
+    else difference xs ys
+  )"
+  *)
+
+lemma equalDifference: "
+  listEquality (difference list list) []
+"
+  nitpick
+  quickcheck
+  apply (induct list) apply simp
+  (* apply (simp add: listEquality_def) *)
+  sledgehammer
+  using isSubSet.simps(1) listEquality_def apply blast
+  sorry
+
+lemma differenceOfNothing: "
+  listEquality (difference list []) list
+"
+  apply (induct list)
+  apply simp
+  sledgehammer
+  apply (metis difference.simps(1) equalDifference)
+  apply (simp add: listEquality_def)
+  (* apply (metis difference.simps(1) equalDifference) *)
+  sorry
+  
+fun intersection::"'a list => 'a list => 'a list"
+  where
+ (* "intersection _ [] = []" | *)
+    "intersection [] _ = []" |
+    "intersection (x # xs) ys = (
+      if List.member ys x \<and> \<not>List.member xs x then (x # (intersection xs ys))
+      else intersection xs ys
+    )"
+
+(* ---------- ? ----------*)
 
 (*
   The first rules override the following.
@@ -89,6 +115,15 @@ fun acceptedAddresses::"chain \<Rightarrow> address list"
     difference (acceptedAddresses rs) as
   )"
 
+lemma acceptedAddressesAreAllFiltered: "
+  filter address chain \<longleftrightarrow> List.member (acceptedAddresses chain) address
+"
+  nitpick [timeout=120]
+  quickcheck [tester=exhaustive]
+  quickcheck [tester=narrowing, size=7, timeout=120]
+  apply auto
+  sorry
+
 (* The function/predicate to program and to prove! *)
 fun equal:: "chain \<Rightarrow> chain \<Rightarrow> bool"
   where
@@ -96,13 +131,16 @@ fun equal:: "chain \<Rightarrow> chain \<Rightarrow> bool"
    listEquality (acceptedAddresses c1) (acceptedAddresses c2)
 "
 
-value "equal aChain1 aChain2"
+value "equal aChain1 aChain3"
+value "acceptedAddresses aChain1"
+value "acceptedAddresses aChain3"
 
-lemma "equal c1 c2 \<longrightarrow> True"
+lemma "filter address chain1 \<and> filter address chain2 \<longrightarrow> equal chain1 chain2"
   nitpick  [timeout=120]
   quickcheck [tester=narrowing]
-  apply auto
-  done
+  apply (induct chain1)
+  apply simp
+  by (metis acceptedAddresses.simps(3) acceptedAddressesAreAllFiltered difference.simps(1) tp5.filter.simps(3))
 
 (* Code exportation directive *)
 export_code equal in Scala
