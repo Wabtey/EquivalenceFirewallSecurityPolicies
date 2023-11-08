@@ -87,7 +87,6 @@ lemma differenceOfNothing: "
   sledgehammer
   apply (metis difference.simps(1) equalDifference)
   apply (simp add: listEquality_def)
-  (* apply (metis difference.simps(1) equalDifference) *)
   sorry
   
 fun intersection::"'a list => 'a list => 'a list"
@@ -122,7 +121,9 @@ lemma acceptedAddressesAreAllFiltered: "
   nitpick [timeout=120]
   quickcheck [tester=exhaustive]
   quickcheck [tester=narrowing, size=7, timeout=120]
-  apply auto
+  apply (induct chain) apply simp
+  sledgehammer
+  apply (simp add: member_rec(2))
   sorry
 
 (* The function/predicate to program and to prove! *)

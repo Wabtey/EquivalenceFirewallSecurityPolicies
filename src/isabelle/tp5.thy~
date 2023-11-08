@@ -37,6 +37,7 @@ value "filter (2,2,2,2) aChain2"
 
 (* ---------- Utilities ----------*)
 
+(* list1 isSubSet list2 *)
 fun isSubSet::"'a list \<Rightarrow> 'a list \<Rightarrow> bool"
   where
     "isSubSet [] _ = True" |
@@ -58,7 +59,7 @@ fun delete::"'a => 'a list => 'a list"
 (* list1 \ list2 *)
 fun difference::"'a list \<Rightarrow> 'a list \<Rightarrow> 'a list"
   where
-  "difference _ [] = []" |
+  "difference xs [] = xs" |
   "difference xs (y # ys) = difference (delete y xs) ys"
   (*
   "difference xs (y # ys) = (
@@ -72,8 +73,7 @@ lemma equalDifference: "
 "
   nitpick
   quickcheck
-  apply (induct list)
-  apply simp
+  apply (induct list) apply simp
   (* apply (simp add: listEquality_def) *)
   sledgehammer
   using isSubSet.simps(1) listEquality_def apply blast
@@ -85,6 +85,7 @@ lemma differenceOfNothing: "
   apply (induct list)
   apply simp
   sledgehammer
+  apply (metis difference.simps(1) equalDifference)
   apply (simp add: listEquality_def)
   (* apply (metis difference.simps(1) equalDifference) *)
   sorry
