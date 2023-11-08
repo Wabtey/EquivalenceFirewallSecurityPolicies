@@ -90,9 +90,9 @@ object tp5 {
       (if (HOL.eq[A](e, x)) delete[A](e, xs) else x :: delete[A](e, xs))
   }
 
-  def difference[A: HOL.equal](uu: List[A], x1: List[A]): List[A] =
-    (uu, x1) match {
-      case (uu, Nil)     => Nil
+  def difference[A: HOL.equal](xs: List[A], x1: List[A]): List[A] =
+    (xs, x1) match {
+      case (xs, Nil)     => xs
       case (xs, y :: ys) => difference[A](delete[A](y, xs), ys)
     }
 
@@ -113,11 +113,11 @@ object tp5 {
         )
     }
 
-  def listEquality[A](list1: List[A], list2: List[A]): Boolean =
-    listEquality[A](list1, list2)
+  def setEquality[A](list1: List[A], list2: List[A]): Boolean =
+    setEquality[A](list1, list2)
 
   def equal(c1: List[rule], c2: List[rule]): Boolean =
-    listEquality[(Nat.nat, (Nat.nat, (Nat.nat, Nat.nat)))](
+    setEquality[(Nat.nat, (Nat.nat, (Nat.nat, Nat.nat)))](
       acceptedAddresses(c1),
       acceptedAddresses(c2)
     )

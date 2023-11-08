@@ -87,7 +87,6 @@ lemma differenceOfNothing: "
   sledgehammer
   apply (metis difference.simps(1) equalDifference)
   apply (simp add: listEquality_def)
-  (* apply (metis difference.simps(1) equalDifference) *)
   sorry
   
 fun intersection::"'a list => 'a list => 'a list"
@@ -122,7 +121,9 @@ lemma acceptedAddressesAreAllFiltered: "
   nitpick [timeout=120]
   quickcheck [tester=exhaustive]
   quickcheck [tester=narrowing, size=7, timeout=120]
-  apply auto
+  apply (induct chain) apply simp
+  sledgehammer
+  apply (simp add: member_rec(2))
   sorry
 
 (* The function/predicate to program and to prove! *)
@@ -136,7 +137,7 @@ value "equal aChain1 aChain3"
 value "acceptedAddresses aChain1"
 value "acceptedAddresses aChain3"
 
-lemma "filter address chain1 \<and> filter address chain2 \<longrightarrow> equal chain1 chain2"
+lemma "equal chain1 chain2 \<longrightarrow> (filter address chain1 \<longleftrightarrow> filter address chain2)"
   nitpick  [timeout=120]
   quickcheck [tester=narrowing]
   apply (induct chain1)

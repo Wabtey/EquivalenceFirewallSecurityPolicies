@@ -43,12 +43,17 @@ fun isSubSet::"'a list \<Rightarrow> 'a list \<Rightarrow> bool"
     "isSubSet [] _ = True" |
     "isSubSet (x # xs) ys = (List.member ys x \<and> isSubSet xs ys)"
 
-definition listEquality ::"'a list => 'a list => bool" where
-[code_abbrev]: "listEquality list1 list2 \<longleftrightarrow>
+(*
+  This doesn't represent a listEquality.
+  [a,b] and [a,a,b] are "equal".
+  In our case, having duplicate don't disturb equality.
+*)
+definition setEquality ::"'a list \<Rightarrow> 'a list \<Rightarrow> bool" where
+[code_abbrev]: "setEquality list1 list2 \<longleftrightarrow>
    isSubSet list1 list2 \<and> isSubSet list2 list1"
 
 (* Delete all iteration of e in the given list *)
-fun delete::"'a => 'a list => 'a list"
+fun delete::"'a \<Rightarrow> 'a list \<Rightarrow> 'a list"
   where
     "delete _ [] = []" |
     "delete e (x # xs) = (
@@ -69,27 +74,26 @@ fun difference::"'a list \<Rightarrow> 'a list \<Rightarrow> 'a list"
   *)
 
 lemma equalDifference: "
-  listEquality (difference list list) []
+  setEquality (difference list list) []
 "
   nitpick
   quickcheck
   apply (induct list) apply simp
-  (* apply (simp add: listEquality_def) *)
+  (* apply (simp add: setEquality_def) *)
+  using isSubSet.simps(1) setEquality_def apply blast
   sledgehammer
-  using isSubSet.simps(1) listEquality_def apply blast
   sorry
 
 lemma differenceOfNothing: "
-  listEquality (difference list []) list
+  setEquality (difference list []) list
 "
-  apply (induct list)
-  apply simp
+  apply (induct list) apply simp
   sledgehammer
   apply (metis difference.simps(1) equalDifference)
-  apply (simp add: listEquality_def)
+  apply (simp add: setEquality_def)
   sorry
   
-fun intersection::"'a list => 'a list => 'a list"
+fun intersection::"'a list \<Rightarrow> 'a list \<Rightarrow> 'a list"
   where
  (* "intersection _ [] = []" | *)
     "intersection [] _ = []" |
@@ -130,18 +134,17 @@ lemma acceptedAddressesAreAllFiltered: "
 fun equal:: "chain \<Rightarrow> chain \<Rightarrow> bool"
   where
 "equal c1 c2 =
-   listEquality (acceptedAddresses c1) (acceptedAddresses c2)
+   setEquality (acceptedAddresses c1) (acceptedAddresses c2)
 "
 
 value "equal aChain1 aChain3"
 value "acceptedAddresses aChain1"
 value "acceptedAddresses aChain3"
 
-lemma "filter address chain1 \<and> filter address chain2 \<longrightarrow> equal chain1 chain2"
+lemma equalRule: "equal chain1 chain2 \<longrightarrow> (\<forall>address. filter address chain1 \<longleftrightarrow> filter address chain2)"
   nitpick  [timeout=120]
   quickcheck [tester=narrowing]
-  apply (induct chain1)
-  apply simp
+  apply (induct chain1) apply simp
   by (metis acceptedAddresses.simps(3) acceptedAddressesAreAllFiltered difference.simps(1) tp5.filter.simps(3))
 
 (* Code exportation directive *)
