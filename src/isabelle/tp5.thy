@@ -127,6 +127,7 @@ lemma acceptedAddressesAreAllFiltered: "
   quickcheck [tester=narrowing, size=7, timeout=120]
   apply (induct chain) apply simp
   sledgehammer
+  (* sledghammer say: "Proof found..." but the proof is not finished.*)
   apply (simp add: member_rec(2))
   sorry
 
@@ -144,8 +145,13 @@ value "acceptedAddresses aChain3"
 lemma equalRule: "equal chain1 chain2 \<longrightarrow> (\<forall>address. filter address chain1 \<longleftrightarrow> filter address chain2)"
   nitpick  [timeout=120]
   quickcheck [tester=narrowing]
+  quickcheck [tester=narrowing, size=7, timeout=120]
   apply (induct chain1) apply simp
-  by (metis acceptedAddresses.simps(3) acceptedAddressesAreAllFiltered difference.simps(1) tp5.filter.simps(3))
+  sledgehammer
+  apply (metis acceptedAddressesAreAllFiltered isSubSet.elims(1) member_rec(2) setEquality_def)
+  (* apply (metis acceptedAddresses.simps(1) acceptedAddressesAreAllFiltered isSubSet.elims(2) setEquality_def tp5.filter.simps(1)) *)
+  (* by (metis acceptedAddresses.simps(3) acceptedAddressesAreAllFiltered difference.simps(1) tp5.filter.simps(3)) *)
+  sorry
 
 (* Code exportation directive *)
 export_code equal in Scala
