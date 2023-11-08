@@ -10,9 +10,7 @@ object EqualObject {
   // from Isabelle/HOL theories. The call you have to write should be something of the form
   // tp5.equal(t1,t2)
   def equal(t1: List[Rule], t2: List[Rule]): Boolean = {
-    // You also have to remove the default value of this function which is, here, set
-    // to false
-    false
+    tp5.equal(t1, t2)
   }
 }
 
